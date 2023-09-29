@@ -1,12 +1,22 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:telegram_dark_mode_animation/home/providers/theme_provider.dart';
 import 'package:telegram_dark_mode_animation/widgets/widgets.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  final snapshotController = SnapshotController();
+  bool isDarkMode = false;
+  @override
   Widget build(BuildContext context) {
     return AdaptiveScaffold(
+      snapshotController: snapshotController,
       title: 'Dark Mode Animation',
       body: Column(
         children: [
@@ -43,6 +53,13 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+      onThemeIconPressed: () {
+        final mode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+        ref.read(themeProvider.notifier).changeTheme(mode);
+        setState(() {
+          isDarkMode = !isDarkMode;
+        });
+      },
     );
   }
 }

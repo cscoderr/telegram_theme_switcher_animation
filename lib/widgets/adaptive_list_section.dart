@@ -20,7 +20,7 @@ class AdaptiveListSection extends StatelessWidget {
     if (Platform.isIOS || Platform.isMacOS) {
       return CupertinoListSection(
         header: title != null ? Text(title!) : null,
-        footer: title != null ? Text(footer!) : null,
+        footer: footer != null ? Text(footer!) : null,
         children: children,
       );
     } else {
