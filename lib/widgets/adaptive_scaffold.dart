@@ -3,153 +3,140 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/rendering/object.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:telegram_dark_mode_animation/home/providers/theme_provider.dart';
 
-class AdaptiveScaffold extends StatelessWidget {
+class AdaptiveScaffold extends ConsumerStatefulWidget {
   const AdaptiveScaffold({
     super.key,
     this.title,
     required this.body,
-    required this.snapshotController,
-    this.onThemeIconPressed,
-    this.radius = 0.0,
     this.circleColor = Colors.white,
-    required this.customSnapshotPainter,
   });
 
   final String? title;
   final Widget body;
-  final SnapshotController snapshotController;
-  final VoidCallback? onThemeIconPressed;
-  final double radius;
   final Color circleColor;
-  final CustomSnapshotPainter customSnapshotPainter;
+
+  @override
+  ConsumerState<AdaptiveScaffold> createState() => _AdaptiveScaffoldState();
+}
+
+class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
+    with SingleTickerProviderStateMixin {
+  bool isDarkMode = false;
+  late final AnimationController _animationController;
+  late final Animation<double> _radiusAnimation;
+  final _globalKey = GlobalKey();
+  // Uint8List? image1;
+  ui.Image? image1;
+  ui.Image? image2;
+  final screenshotController = ScreenshotController();
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _radiusAnimation = Tween<double>(begin: 0.0, end: 1000.0)
+        // .chain(CurveTween(curve: const Cubic(0.208333, 0.82, 0.25, 1.0)))
+        // .chain(CurveTween(curve: const Interval(0.2075, 0.4175)))
+        .animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animationController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  void _handelThemeIconPressed() async {
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    // image1 = await screenshotController.capture();
+    image1 = await screenshotController.captureAsUiImage(
+      pixelRatio: pixelRatio,
+    );
+    setState(() {});
+    final theme = ref.watch(themeProvider);
+    ref.read(themeProvider.notifier).changeTheme(
+        theme == ThemeMode.light ? ThemeMode.dark : ThemeMode.light);
+    await Future.delayed(const Duration(milliseconds: 10));
+    image2 = await screenshotController.captureAsUiImage();
+    if (!_animationController.isCompleted) {
+      _animationController.forward();
+    } else {
+      _animationController.reset();
+    }
+    // await Future.delayed(const Duration(milliseconds: 600));
+    // setState(() {
+    //   image1 = null;
+    //   image2 = null;
+    // });
+  }
+
   @override
   Widget build(BuildContext context) {
-    Widget? widget;
+    final theme = ref.watch(themeProvider);
+    Widget? page;
     if (Platform.isIOS || Platform.isMacOS) {
-      widget = CupertinoPageScaffold(
+      page = CupertinoPageScaffold(
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
-              if (title != null)
+              if (widget.title != null)
                 CupertinoSliverNavigationBar(
-                  largeTitle: Text(title!),
+                  largeTitle: Text(widget.title!),
                   trailing: IconButton(
                     icon: const Icon(Icons.light_mode),
-                    onPressed: onThemeIconPressed,
+                    onPressed: _handelThemeIconPressed,
                   ),
                 )
             ];
           },
-          body: body,
+          body: widget.body,
         ),
       );
     } else {
       // PageTransitionsTheme()
-      widget = Scaffold(
-        appBar: title != null
+      page = Scaffold(
+        appBar: widget.title != null
             ? AppBar(
-                title: Text(title!),
+                title: Text(widget.title!),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.light_mode),
-                    onPressed: onThemeIconPressed,
+                    onPressed: _handelThemeIconPressed,
                   ),
                 ],
               )
             : null,
-        body: body,
+        body: widget.body,
       );
     }
-    return IgnorePointer(
-      ignoring: false,
-      child: SnapshotWidget(
-        controller: snapshotController,
-        mode: SnapshotMode.permissive,
-        painter: customSnapshotPainter,
-        autoresize: true,
-        child: widget,
-      ),
-      // Stack(
-      //   children: [
-      //     SnapshotWidget(
-      //       controller: snapshotController,
-      //       mode: SnapshotMode.permissive,
-      //       painter: customSnapshotPainter,
-      //       autoresize: true,
-      //       child: widget,
-      //     ),
-      //     // Align(
-      //     //   alignment: Alignment.topRight,
-      //     //   child: Transform.scale(
-      //     //     scale: radius,
-      //     //     child: Container(
-      //     //       height: 70,
-      //     //       width: 70,
-      //     //       decoration: BoxDecoration(
-      //     //         color: circleColor,
-      //     //         shape: BoxShape.circle,
-      //     //       ),
-      //     //     ),
-      //     //   ),
-      //     // ),
-      //   ],
-      // ),
+    return Stack(
+      children: [
+        Screenshot(
+          controller: screenshotController,
+          child: page,
+        ),
+        // if (image1 != null) Image.memory(image1!),
+        Positioned.fill(
+          child: ShaderMask(
+            blendMode: BlendMode.dstOut,
+            shaderCallback: (bounds) {
+              return ImageShader(
+                image2!,
+                TileMode.clamp,
+                TileMode.clamp,
+                Matrix4.identity().storage,
+              );
+            },
+          ),
+        ),
+      ],
     );
-  }
-}
-
-class CustomSnapshotPainter extends SnapshotPainter {
-  CustomSnapshotPainter({
-    required this.reverse,
-    required this.scale,
-    required this.fade,
-    required this.animation,
-    required this.radius,
-    required this.radiusColor,
-  }) {
-    animation.addListener(notifyListeners);
-    animation.addStatusListener(_onStatusChange);
-    scale.addListener(notifyListeners);
-    fade.addListener(notifyListeners);
-    radius.addListener(notifyListeners);
-  }
-
-  void _onStatusChange(_) {
-    notifyListeners();
-  }
-
-  final bool reverse;
-  final Animation<double> animation;
-  final Animation<double> scale;
-  final Animation<double> fade;
-  final Animation<double> radius;
-  final Color radiusColor;
-  @override
-  void paint(PaintingContext context, Offset offset, Size size,
-      PaintingContextCallback painter) {
-    painter(context, offset);
-  }
-
-  @override
-  bool shouldRepaint(covariant SnapshotPainter oldPainter) => true;
-
-  @override
-  void paintSnapshot(PaintingContext context, ui.Offset offset, ui.Size size,
-      ui.Image image, ui.Size sourceSize, double pixelRatio) {
-    context.canvas.drawCircle(
-      Offset(size.width, 0),
-      radius.value,
-      Paint()..color = Colors.white,
-    );
-    final Rect src = Rect.fromLTWH(0, 0, sourceSize.width, sourceSize.height);
-    final Rect dst =
-        Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
-    final Paint paint = Paint()
-      ..filterQuality = FilterQuality.low
-      ..color = const ui.Color.fromARGB(228, 255, 255, 250);
-    context.canvas.drawImageRect(image, src, dst, paint);
-    // _drawImageScaledAndCentered(context, image, 1, 0.5, pixelRatio);
   }
 }

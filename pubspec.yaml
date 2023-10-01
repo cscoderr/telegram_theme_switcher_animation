@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.4.1
+  screenshot: ^2.1.0
 
 dev_dependencies:
   flutter_test:
