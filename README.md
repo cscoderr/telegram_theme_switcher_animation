@@ -1,3 +1,3 @@
-# Telegram Color Switch Animation
+# Telegram Theme Switcher Animation
 
 A new Flutter project.
