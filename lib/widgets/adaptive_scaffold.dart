@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:telegram_dark_mode_animation/home/providers/theme_provider.dart';
@@ -28,23 +29,19 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
   bool isDarkMode = false;
   late final AnimationController _animationController;
   late final Animation<double> _radiusAnimation;
-  final _globalKey = GlobalKey();
-  // Uint8List? image1;
-  ui.Image? image1;
+  Uint8List? image1;
   ui.Image? image2;
   final screenshotController = ScreenshotController();
+  Brightness? systemNavigationBarBrighness;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 500),
     );
-    _radiusAnimation = Tween<double>(begin: 0.0, end: 1000.0)
-        // .chain(CurveTween(curve: const Cubic(0.208333, 0.82, 0.25, 1.0)))
-        // .chain(CurveTween(curve: const Interval(0.2075, 0.4175)))
-        .animate(
+    _radiusAnimation = Tween<double>(begin: 0.0, end: 1000.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
@@ -54,32 +51,45 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
   }
 
   void _handelThemeIconPressed() async {
-    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    // image1 = await screenshotController.capture();
-    image1 = await screenshotController.captureAsUiImage(
-      pixelRatio: pixelRatio,
-    );
-    setState(() {});
     final theme = ref.watch(themeProvider);
+    final currentBrightness =
+        theme == ThemeMode.light ? Brightness.dark : Brightness.light;
+    setState(() {
+      systemNavigationBarBrighness = currentBrightness;
+    });
+    image1 = await screenshotController.capture();
+    setState(() {});
+    //Wait for 40MS before changing the theme
+    //to avoid Jank issue
+    await Future.delayed(const Duration(milliseconds: 40));
     ref.read(themeProvider.notifier).changeTheme(
         theme == ThemeMode.light ? ThemeMode.dark : ThemeMode.light);
-    await Future.delayed(const Duration(milliseconds: 10));
+    // Tried 200 but the the theme is still switching
+    // So i think 250 works well
+    await Future.delayed(const Duration(milliseconds: 250));
+    setState(() {
+      systemNavigationBarBrighness = currentBrightness == Brightness.light
+          ? Brightness.dark
+          : Brightness.light;
+    });
+
     image2 = await screenshotController.captureAsUiImage();
-    if (!_animationController.isCompleted) {
-      _animationController.forward();
-    } else {
-      _animationController.reset();
-    }
-    // await Future.delayed(const Duration(milliseconds: 600));
-    // setState(() {
-    //   image1 = null;
-    //   image2 = null;
-    // });
+    _animationController.forward();
+    //Delay for the radius/circle animation
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    //This clears the images and animation
+    setState(() {
+      image1 = null;
+      image2 = null;
+    });
+    _animationController.reset();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
+    final size = MediaQuery.sizeOf(context);
     Widget? page;
     if (Platform.isIOS || Platform.isMacOS) {
       page = CupertinoPageScaffold(
@@ -90,7 +100,11 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
                 CupertinoSliverNavigationBar(
                   largeTitle: Text(widget.title!),
                   trailing: IconButton(
-                    icon: const Icon(Icons.light_mode),
+                    icon: theme == ThemeMode.dark
+                        ? const Icon(Icons.light_mode)
+                        : const Icon(
+                            Icons.dark_mode,
+                          ),
                     onPressed: _handelThemeIconPressed,
                   ),
                 )
@@ -107,10 +121,17 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
                 title: Text(widget.title!),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.light_mode),
+                    icon: theme == ThemeMode.dark
+                        ? const Icon(Icons.light_mode)
+                        : const Icon(
+                            Icons.dark_mode,
+                          ),
                     onPressed: _handelThemeIconPressed,
                   ),
                 ],
+                systemOverlayStyle: SystemUiOverlayStyle(
+                  statusBarIconBrightness: systemNavigationBarBrighness,
+                ),
               )
             : null,
         body: widget.body,
@@ -122,21 +143,45 @@ class _AdaptiveScaffoldState extends ConsumerState<AdaptiveScaffold>
           controller: screenshotController,
           child: page,
         ),
-        // if (image1 != null) Image.memory(image1!),
-        Positioned.fill(
-          child: ShaderMask(
-            blendMode: BlendMode.dstOut,
-            shaderCallback: (bounds) {
-              return ImageShader(
-                image2!,
-                TileMode.clamp,
-                TileMode.clamp,
-                Matrix4.identity().storage,
-              );
-            },
+        if (image1 != null) Image.memory(image1!),
+        if (image2 != null)
+          Align(
+            alignment: Alignment.topRight,
+            child: ClipOval(
+              clipper: CircleClipper(_radiusAnimation.value),
+              child: ShaderMask(
+                blendMode: BlendMode.dstATop,
+                shaderCallback: (bounds) {
+                  return ImageShader(
+                    image2!,
+                    TileMode.clamp,
+                    TileMode.clamp,
+                    Matrix4.identity().storage,
+                  );
+                },
+                child: Container(
+                  width: size.width,
+                  height: size.height,
+                  decoration: const BoxDecoration(
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
       ],
     );
+  }
+}
+
+class CircleClipper extends CustomClipper<Rect> {
+  CircleClipper(this.radius);
+  final double radius;
+  @override
+  bool shouldReclip(covariant CustomClipper oldClipper) => true;
+
+  @override
+  ui.Rect getClip(ui.Size size) {
+    return Rect.fromCircle(center: Offset(size.width - 20, 80), radius: radius);
   }
 }

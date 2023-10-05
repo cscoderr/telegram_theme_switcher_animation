@@ -80,20 +80,20 @@ class AdaptiveScaffold extends StatelessWidget {
       //       autoresize: true,
       //       child: widget,
       //     ),
-      //     // Align(
-      //     //   alignment: Alignment.topRight,
-      //     //   child: Transform.scale(
-      //     //     scale: radius,
-      //     //     child: Container(
-      //     //       height: 70,
-      //     //       width: 70,
-      //     //       decoration: BoxDecoration(
-      //     //         color: circleColor,
-      //     //         shape: BoxShape.circle,
-      //     //       ),
-      //     //     ),
-      //     //   ),
-      //     // ),
+      // Align(
+      //   alignment: Alignment.topRight,
+      //   child: Transform.scale(
+      //     scale: radius,
+      //     child: Container(
+      //       height: 70,
+      //       width: 70,
+      //       decoration: BoxDecoration(
+      //         color: circleColor,
+      //         shape: BoxShape.circle,
+      //       ),
+      //     ),
+      //   ),
+      // ),
       //   ],
       // ),
     );
