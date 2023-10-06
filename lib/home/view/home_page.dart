@@ -8,7 +8,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     return ThemeSwitcherScaffold(
-      title: 'Telegram Theme Animation',
+      title: const Text('Telegram Theme Animation'),
       body: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(

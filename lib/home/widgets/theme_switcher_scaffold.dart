@@ -13,7 +13,7 @@ class ThemeSwitcherScaffold extends ConsumerStatefulWidget {
     required this.body,
   });
 
-  final String? title;
+  final Widget? title;
   final Widget body;
 
   @override
@@ -114,7 +114,7 @@ class _ThemeSwitcherScaffoldState extends ConsumerState<ThemeSwitcherScaffold>
     final page = Scaffold(
       appBar: widget.title != null
           ? AppBar(
-              title: Text(widget.title!),
+              title: widget.title,
               actions: [
                 IconButton(
                   icon: theme == ThemeMode.dark
