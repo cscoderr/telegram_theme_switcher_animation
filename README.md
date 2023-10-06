@@ -2,7 +2,7 @@
 
 ### Telegram Theme Switcher || [Link to code](https://github.com/cscoderr/telegram_theme_switcher_animation)
 
-<img src="gifs/telegram_theme_switcher.gif" width="50%" vspace="10" hspace="10"/>
+<img src="telegram_theme_switcher.gif" width="50%" vspace="10" hspace="10"/>
 
 ## 🤓 Developer
 
