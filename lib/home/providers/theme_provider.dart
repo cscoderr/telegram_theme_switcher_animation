@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ThemeProvider extends StateNotifier<ThemeMode> {
   ThemeProvider() : super(ThemeMode.system);
 
-  void changeTheme(ThemeMode themeMode) {
+  void switchTheme(ThemeMode themeMode) {
     state = themeMode;
   }
 }

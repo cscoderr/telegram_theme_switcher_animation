@@ -8,40 +8,12 @@ class MainApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(themeProvider);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      themeMode: theme,
-      theme: AppTheme.instance.lightTheme(ThemeMode.light),
-      darkTheme: AppTheme.instance.darkTheme(ThemeMode.dark),
+      themeMode: ref.watch(themeProvider),
+      theme: ThemeData.light(useMaterial3: true),
+      darkTheme: ThemeData.dark(useMaterial3: true),
       home: const HomePage(),
     );
-  }
-}
-
-class AppTheme {
-  AppTheme._();
-  static final AppTheme _instance = AppTheme._();
-  static AppTheme get instance => _instance;
-
-  ThemeData _mainTheme(ThemeMode themeMode) {
-    return ThemeData(
-      brightness:
-          themeMode == ThemeMode.dark ? Brightness.dark : Brightness.light,
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.orange,
-        brightness:
-            themeMode == ThemeMode.dark ? Brightness.dark : Brightness.light,
-      ),
-    );
-  }
-
-  ThemeData darkTheme(ThemeMode themeMode) {
-    return _mainTheme(themeMode).copyWith();
-  }
-
-  ThemeData lightTheme(ThemeMode themeMode) {
-    return _mainTheme(themeMode).copyWith();
   }
 }

@@ -1,47 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:telegram_dark_mode_animation/widgets/widgets.dart';
+import 'package:telegram_dark_mode_animation/home/home.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AdaptiveScaffold(
-      title: 'Dark Mode Animation',
-      body: Column(
-        children: [
-          AdaptiveListSection(
-            title: 'TEXT SECTION',
-            children: [
-              AdpativeSwitchTile(
-                title: "Large Display",
-                value: true,
-                onChanged: (value) {},
+    bool isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    return ThemeSwitcherScaffold(
+      title: 'Telegram Theme Animation',
+      body: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: Icon(
+                isDarkTheme ? Icons.light_mode : Icons.dark_mode,
               ),
-              AdpativeSwitchTile(
-                title: "Bold Text",
-                value: false,
-                onChanged: (value) {},
+              title: Text(
+                isDarkTheme ? 'Dark Mode' : 'Light Mode',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ],
-          ),
-          AdaptiveListSection(
-            title: 'DISPLAY SECTION',
-            footer: 'This is a Simple Footer.',
-            children: [
-              AdpativeSwitchTile(
-                title: 'Night Light',
-                value: false,
-                onChanged: (value) {},
-              ),
-              AdpativeSwitchTile(
-                title: 'True Tone',
-                value: true,
-                onChanged: (value) {},
-              ),
-            ],
-          ),
-        ],
+              subtitle: const Text('Subtitle'),
+              trailing: const Icon(Icons.arrow_forward_ios),
+            ),
+            const ListTile(
+              title: Text('Title'),
+              subtitle: Text('Subtitle'),
+            )
+          ],
+        ),
       ),
     );
   }
