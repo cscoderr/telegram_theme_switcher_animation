@@ -48,7 +48,7 @@ class _ThemeSwitcherScaffoldState extends ConsumerState<ThemeSwitcherScaffold>
     });
   }
 
-  void _handelThemeIconPressed() async {
+  void _handleThemeIconPressed() async {
     bool isDarkTheme = Theme.of(context).brightness == Brightness.dark;
 
     final currentBrightness = isDarkTheme ? Brightness.light : Brightness.dark;
@@ -122,7 +122,7 @@ class _ThemeSwitcherScaffoldState extends ConsumerState<ThemeSwitcherScaffold>
                       : const Icon(
                           Icons.dark_mode,
                         ),
-                  onPressed: _handelThemeIconPressed,
+                  onPressed: _handleThemeIconPressed,
                 ),
               ],
               systemOverlayStyle: SystemUiOverlayStyle(
