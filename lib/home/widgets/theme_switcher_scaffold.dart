@@ -108,6 +108,12 @@ class _ThemeSwitcherScaffoldState extends ConsumerState<ThemeSwitcherScaffold>
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
     final size = MediaQuery.sizeOf(context);
